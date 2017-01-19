@@ -1,0 +1,10 @@
+{
+  "name": "serverless-graphql-functions",
+  "dependencies": {
+    "dotenv": "^4.0.0",
+    "dynogels": "^6.2.0",
+    "graphql": "^0.8.2",
+    "joi": "^10.1.0",
+    "uuid": "^3.0.1"
+  }
+}

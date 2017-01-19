@@ -1,0 +1,80 @@
+service: serverless-graphql
+
+frameworkVersion: ">=1.1.0 <2.0.0"
+
+provider:
+  name: aws
+  runtime: nodejs4.3
+  region: ${opt:region, self:custom.defaultRegion}
+  stage: ${opt:stage, self:custom.defaultStage}
+
+  iamRoleStatements:
+    - Effect: Allow
+      Action:
+        - dynamodb:DescribeTable
+        - dynamodb:Query
+        - dynamodb:Scan
+        - dynamodb:GetItem
+        - dynamodb:PutItem
+        - dynamodb:UpdateItem
+        - dynamodb:DeleteItem
+      Resource: "arn:aws:dynamodb:ap-southeast-1:*:*"
+
+custom:
+  defaultStage: dev
+  defaultRegion: ap-southeast-1
+  achievementTableName: achievements-${self:provider.stage}
+  writeEnvVars:
+      ACHIEVEMENT_TABLE_NAME: ${self:custom.achievementTableName}
+
+plugins:
+  - serverless-plugin-write-env-vars
+
+package:
+  exclude:
+    - coverage/**
+    - test/**
+    - src/**
+    - .editorconfig
+    - .env-*
+    - .envrc
+    - .eslint*
+    - .gitignore
+    - .node-version
+    - .travis.yml
+    - .idea/**
+    - .npmignore
+    - .babelrc
+    - deploy.sh
+    - install.sh
+    - package.json
+    - README.md
+
+functions:
+  graphql:
+    handler: build/index.graphql
+    events:
+      - http:
+          path: graphql
+          method: post
+          cors: true
+          integration: lambda
+
+resources:
+  Resources:
+    AchievementDynamoDbTable:
+      Type: 'AWS::DynamoDB::Table'
+      DeletionPolicy: Retain
+      Properties:
+        AttributeDefinitions:
+          -
+            AttributeName: id
+            AttributeType: S
+        KeySchema:
+          -
+            AttributeName: id
+            KeyType: HASH
+        ProvisionedThroughput:
+          ReadCapacityUnits: 1
+          WriteCapacityUnits: 1
+        TableName: ${self:custom.achievementTableName}
